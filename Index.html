@@ -1,0 +1,58 @@
+<html lang="en-US">
+	<head>
+		<meta charset="UTF-8">
+		<script src="lib/jquery-3.5.1.min.js"></script>
+		<script>
+			var poke = [];
+			
+			$(document).ready(function() {
+				console.log("on ready");
+				getGeneration([2, 3]);
+			});
+			
+			function getGeneration(genNums) {
+				let received = 0;
+				for(let i = 0; i < genNums.length; i++) {
+					$.get("https://pokeapi.co/api/v2/generation/" + genNums[i] + "/", function(response) {
+						console.log(response);
+						poke.push(...response.pokemon_species);
+						
+						received++;
+						if(received === genNums.length) {
+							refreshContainer();
+						}
+					});
+				}
+			}
+			
+			function refreshContainer() {
+				poke.sort(function(a, b){
+					var numA = getNumFromUrl(a.url);
+					var numB = getNumFromUrl(b.url);
+					return numA - numB;
+				});
+				for(let i = 0; i < poke.length; i++) {
+					let item = document.createElement("li");
+					item.innerHTML = poke[i].name;
+					$("#mainContainer").append(item);
+				}
+			}
+			
+			function getNumFromUrl(url) {
+				let rx = /(\d+)\/$/
+				return rx.exec(url)[1];
+			}
+		</script>
+		<style>
+			.inactive {
+				filter: grayscale(100%);
+			}
+		</style>
+	</head>
+	<body>
+		list
+		<ul id="mainContainer">
+			
+		</ul>
+	</body>
+</html>
