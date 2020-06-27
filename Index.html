@@ -3,22 +3,66 @@
 		<meta charset="UTF-8">
 		<script src="lib/jquery-3.5.1.min.js"></script>
 		<script>
-			var poke = [];
+			const pokeApiBaseUrl = "https://pokeapi.co/api/v2/";
+			let poke = [];
 			
 			$(document).ready(function() {
 				console.log("on ready");
-				getGeneration([2, 3]);
+				$.get(pokeApiBaseUrl + "generation", function(response) {
+					let rows = [];
+					for(let i = 0; i < response.results.length; i++) {
+						let genNum = getNumFromUrl(response.results[i].url);
+						let splitName = response.results[i].name.split("-");
+						
+						//Create the tags for generations obtained from the api
+						let row = document.createElement("tr");
+						let col = document.createElement("td");
+						let cbx = document.createElement("input");
+						cbx.type = "checkbox";
+						cbx.id = "gen" + genNum + "Check";
+						$(cbx).attr("genNum", genNum);
+						let label = document.createElement("label");
+						$(label).attr("for", cbx.id);
+						label.innerText = capitalizeFirstLetter(splitName[0]) + " " + splitName[1].toUpperCase();
+						
+						//Append the elements to each other leaving the row as base element
+						$(row).append(col);
+						let jqCol = $(col);
+						jqCol.append(cbx);
+						jqCol.append(label);
+						rows.push(row);
+					}
+					//Add the rows to the generation selection modal
+					$("#genCheckboxes").append(rows);
+				});
 			});
 			
-			function getGeneration(genNums) {
+			function handleLoadGensClick() {
+				let selectedGens = [];
+				$("#genCheckboxes [type=checkbox]:checked").each(function(index, genBox) {
+					selectedGens.push(+$(genBox).attr("genNum"));
+				});
+				if(selectedGens.length > 0) {
+					loadPokemonFromGens(selectedGens);
+				}
+			}
+			
+			function loadPokemonFromGens(genNums) {
 				let received = 0;
+				poke = [];
 				for(let i = 0; i < genNums.length; i++) {
-					$.get("https://pokeapi.co/api/v2/generation/" + genNums[i] + "/", function(response) {
+					$.get(pokeApiBaseUrl + "generation/" + genNums[i] + "/", function(response) {
 						console.log(response);
 						poke.push(...response.pokemon_species);
 						
 						received++;
 						if(received === genNums.length) {
+							poke.sort(function(a, b){
+								var numA = getNumFromUrl(a.url);
+								var numB = getNumFromUrl(b.url);
+								return numA - numB;
+							});
+							$("#genModal").hide();
 							refreshContainer();
 						}
 					});
@@ -26,15 +70,12 @@
 			}
 			
 			function refreshContainer() {
-				poke.sort(function(a, b){
-					var numA = getNumFromUrl(a.url);
-					var numB = getNumFromUrl(b.url);
-					return numA - numB;
-				});
+				let mainContainer = $("#mainContainer");
+				mainContainer.children().detach()
 				for(let i = 0; i < poke.length; i++) {
 					let item = document.createElement("li");
 					item.innerHTML = poke[i].name;
-					$("#mainContainer").append(item);
+					mainContainer.append(item);
 				}
 			}
 			
@@ -42,17 +83,37 @@
 				let rx = /(\d+)\/$/
 				return rx.exec(url)[1];
 			}
-		</script>
-		<style>
-			.inactive {
-				filter: grayscale(100%);
+			
+			function capitalizeFirstLetter(string) {
+				return string.charAt(0).toUpperCase() + string.slice(1);
 			}
-		</style>
+		</script>
+		<link rel="stylesheet" href="assets/main.css">
 	</head>
 	<body>
+		<div class="modalBox" id="genModal">
+			<div class="modalBg"></div>
+			<div class="genSelectBox">
+				Select generations to load
+				
+				<table id="genCheckboxes">
+					<!-- Here will appear the generations after loading -->
+				</table>
+				
+				<button onclick="handleLoadGensClick()">Load!</button>
+			</div>
+		</div>
 		list
 		<ul id="mainContainer">
 			
 		</ul>
+		
+		<svg width="30" height="30">
+			<path stroke-opacity="0" id="svg_7" d="m203.7406,174.06762c0,0 31.9716,0.20897 31.76265,0.20896c1.46274,-25.70265 25.07576,-25.49369 24.8668,-25.49369c0.20896,0 0.20896,-31.9716 0,-31.97161c-57.88324,4.38827 -56.62945,57.25634 -56.62945,57.25634z" stroke-width="1.5" stroke="#000000" fill="#ff0000"></path>
+			<path stroke-opacity="0" transform="rotate(90 288.7636108398438,145.33496093750003) " id="svg_8" d="m260.371575,173.858655c0,0 31.9716,0.20897 31.76265,0.20896c1.46274,-25.70265 25.07576,-25.49369 24.8668,-25.49369c0.20896,0 0.20896,-31.9716 0,-31.97161c-57.88324,4.38827 -56.62945,57.25634 -56.62945,57.25634z" stroke-width="1.5" stroke="#000000" fill="#ff0000"></path>
+			<path transform="rotate(-180 288.97100830078125,203.84509277343747) " stroke-opacity="0" id="svg_9" d="m260.57901,232.368781c0,0 31.9716,0.20897 31.76265,0.20896c1.46274,-25.70265 25.07576,-25.49369 24.8668,-25.49369c0.20896,0 0.20896,-31.9716 0,-31.97161c-57.88324,4.38827 -56.62945,57.25634 -56.62945,57.25634z" stroke-width="1.5" stroke="#000000" fill="#BBBBBB"></path>
+			<path stroke-opacity="0" transform="rotate(-90 232.34307861328128,204.05406188964847) " id="svg_10" d="m203.951091,232.57775c0,0 31.9716,0.20897 31.76265,0.20896c1.46274,-25.70265 25.07576,-25.49369 24.8668,-25.49369c0.20896,0 0.20896,-31.9716 0,-31.97161c-57.88324,4.38827 -56.62945,57.25634 -56.62945,57.25634z" stroke-width="1.5" stroke="#000000" fill="#BBBBBB"></path>
+			<ellipse ry="14.209602" rx="14.209602" id="svg_11" cy="175.112446" cx="261.2059" stroke-opacity="0" stroke-width="1.5" stroke="#000000" fill="#BBBBBB"></ellipse>
+		</svg>
 	</body>
 </html>

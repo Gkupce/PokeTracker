@@ -1,0 +1,29 @@
+.modalBox {
+	position: absolute;
+	z-index: 10;
+	top: 0px;
+	left: 0px;
+	height: 100%;
+	width: 100%;
+}
+
+.modalBg {
+	background-color: #ffffff99;
+	height: 100%;
+	width: 100%;
+	top: 0px;
+	left: 0px;
+	position: absolute;
+	z-index: -1;
+}
+
+.genSelectBox {
+	border: 1px solid black;
+	border-radius: 3em;
+	margin: 10em;
+	padding: 2.5em;
+}
+
+.inactive {
+	filter: grayscale(100%);
+}
