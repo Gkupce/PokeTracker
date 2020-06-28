@@ -7,6 +7,15 @@
 	width: 100%;
 }
 
+.spinnerBox {
+	position: absolute;
+	z-index: 100;
+	top: 0px;
+	left: 0px;
+	height: 100%;
+	width: 100%;
+}
+
 .modalBg {
 	background-color: #ffffff99;
 	height: 100%;
@@ -14,7 +23,14 @@
 	top: 0px;
 	left: 0px;
 	position: absolute;
-	z-index: -1;
+}
+
+.modalBox .modalBg {
+	z-index: 9;
+}
+
+.spinnerBox .modalBg {
+	z-index: 90;
 }
 
 .genSelectBox {
@@ -22,8 +38,26 @@
 	border-radius: 3em;
 	margin: 10em;
 	padding: 2.5em;
+	position: relative;
+	z-index: 10;
 }
 
 .inactive {
 	filter: grayscale(100%);
 }
+
+.spinner {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 120px;
+	height: 120px;
+	margin:-60px 0 0 -60px;
+	-webkit-animation:spin 4s linear infinite;
+	-moz-animation:spin 4s linear infinite;
+	animation:spin 4s linear infinite;
+	z-index: inherit;
+}
+@-moz-keyframes spin { 100% { -moz-transform: rotate(360deg); } }
+@-webkit-keyframes spin { 100% { -webkit-transform: rotate(360deg); } }
+@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }

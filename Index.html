@@ -34,6 +34,9 @@
 					}
 					//Add the rows to the generation selection modal
 					$("#genCheckboxes").append(rows);
+					
+					$("#genModal").show();
+					$("#loadingModal").hide();
 				});
 			});
 			
@@ -43,6 +46,7 @@
 					selectedGens.push(+$(genBox).attr("genNum"));
 				});
 				if(selectedGens.length > 0) {
+					$("#loadingModal").show();
 					loadPokemonFromGens(selectedGens);
 				}
 			}
@@ -63,6 +67,7 @@
 								return numA - numB;
 							});
 							$("#genModal").hide();
+							$("#loadingModal").hide();
 							refreshContainer();
 						}
 					});
@@ -91,7 +96,11 @@
 		<link rel="stylesheet" href="assets/main.css">
 	</head>
 	<body>
-		<div class="modalBox" id="genModal">
+		<div class="spinnerBox" id="loadingModal">
+			<div class="modalBg"></div>
+			<img src="assets/Ball.PNG" alt="Loading..." class="spinner"></img>
+		</div>
+		<div class="modalBox" id="genModal" style="display: none;">
 			<div class="modalBg"></div>
 			<div class="genSelectBox">
 				Select generations to load
@@ -107,13 +116,5 @@
 		<ul id="mainContainer">
 			
 		</ul>
-		
-		<svg width="30" height="30">
-			<path stroke-opacity="0" id="svg_7" d="m203.7406,174.06762c0,0 31.9716,0.20897 31.76265,0.20896c1.46274,-25.70265 25.07576,-25.49369 24.8668,-25.49369c0.20896,0 0.20896,-31.9716 0,-31.97161c-57.88324,4.38827 -56.62945,57.25634 -56.62945,57.25634z" stroke-width="1.5" stroke="#000000" fill="#ff0000"></path>
-			<path stroke-opacity="0" transform="rotate(90 288.7636108398438,145.33496093750003) " id="svg_8" d="m260.371575,173.858655c0,0 31.9716,0.20897 31.76265,0.20896c1.46274,-25.70265 25.07576,-25.49369 24.8668,-25.49369c0.20896,0 0.20896,-31.9716 0,-31.97161c-57.88324,4.38827 -56.62945,57.25634 -56.62945,57.25634z" stroke-width="1.5" stroke="#000000" fill="#ff0000"></path>
-			<path transform="rotate(-180 288.97100830078125,203.84509277343747) " stroke-opacity="0" id="svg_9" d="m260.57901,232.368781c0,0 31.9716,0.20897 31.76265,0.20896c1.46274,-25.70265 25.07576,-25.49369 24.8668,-25.49369c0.20896,0 0.20896,-31.9716 0,-31.97161c-57.88324,4.38827 -56.62945,57.25634 -56.62945,57.25634z" stroke-width="1.5" stroke="#000000" fill="#BBBBBB"></path>
-			<path stroke-opacity="0" transform="rotate(-90 232.34307861328128,204.05406188964847) " id="svg_10" d="m203.951091,232.57775c0,0 31.9716,0.20897 31.76265,0.20896c1.46274,-25.70265 25.07576,-25.49369 24.8668,-25.49369c0.20896,0 0.20896,-31.9716 0,-31.97161c-57.88324,4.38827 -56.62945,57.25634 -56.62945,57.25634z" stroke-width="1.5" stroke="#000000" fill="#BBBBBB"></path>
-			<ellipse ry="14.209602" rx="14.209602" id="svg_11" cy="175.112446" cx="261.2059" stroke-opacity="0" stroke-width="1.5" stroke="#000000" fill="#BBBBBB"></ellipse>
-		</svg>
 	</body>
 </html>
