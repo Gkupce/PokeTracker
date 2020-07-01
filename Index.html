@@ -2,6 +2,7 @@
 	<head>
 		<meta charset="UTF-8">
 		<script src="lib/jquery-3.5.1.min.js"></script>
+		<script src="assets/pokeApiParsing.js"></script>
 		<script>
 			const pokeApiBaseUrl = "https://pokeapi.co/api/v2/";
 			let poke = [];
@@ -47,50 +48,32 @@
 				});
 				if(selectedGens.length > 0) {
 					$("#loadingModal").show();
-					loadPokemonFromGens(selectedGens);
+					loadPokemonFromGens(selectedGens, refreshContainer);
 				}
 			}
 			
-			function loadPokemonFromGens(genNums) {
-				let received = 0;
-				poke = [];
-				for(let i = 0; i < genNums.length; i++) {
-					$.get(pokeApiBaseUrl + "generation/" + genNums[i] + "/", function(response) {
-						console.log(response);
-						poke.push(...response.pokemon_species);
-						
-						received++;
-						if(received === genNums.length) {
-							poke.sort(function(a, b){
-								var numA = getNumFromUrl(a.url);
-								var numB = getNumFromUrl(b.url);
-								return numA - numB;
-							});
-							$("#genModal").hide();
-							$("#loadingModal").hide();
-							refreshContainer();
-						}
-					});
-				}
-			}
-			
-			function refreshContainer() {
+			function refreshContainer(loadedPoke) {
+				poke = loadedPoke;
 				let mainContainer = $("#mainContainer");
 				mainContainer.children().detach()
-				for(let i = 0; i < poke.length; i++) {
-					let item = document.createElement("li");
-					item.innerHTML = poke[i].name;
-					mainContainer.append(item);
+				
+				for (const id in poke) {
+					if (poke.hasOwnProperty(id)) {
+						const element = poke[id];
+						let row = document.createElement("tr");
+						let imgTd = document.createElement("td");
+						let img = document.createElement("img");
+						img.src = element.spriteUrl;
+						imgTd.append(img);
+						let nameTd = document.createElement("td");
+						nameTd.innerHTML = element.name;
+						row.append(imgTd);
+						row.append(nameTd);
+						mainContainer.append(row);
+					}
 				}
-			}
-			
-			function getNumFromUrl(url) {
-				let rx = /(\d+)\/$/
-				return rx.exec(url)[1];
-			}
-			
-			function capitalizeFirstLetter(string) {
-				return string.charAt(0).toUpperCase() + string.slice(1);
+				$("#genModal").hide();
+				$("#loadingModal").hide();
 			}
 		</script>
 		<link rel="stylesheet" href="assets/main.css">
@@ -113,8 +96,8 @@
 			</div>
 		</div>
 		list
-		<ul id="mainContainer">
+		<table id="mainContainer">
 			
-		</ul>
+		</table>
 	</body>
 </html>
