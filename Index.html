@@ -4,27 +4,30 @@
 		<script src="lib/jquery-3.5.1.min.js"></script>
 		<script src="assets/pokeApiParsing.js"></script>
 		<script>
-			const pokeApiBaseUrl = "https://pokeapi.co/api/v2/";
+			const LAST_SESSION_NAME = "lastSession";
 			let poke = [];
 			
 			$(document).ready(function() {
+				if(window.localStorage.getItem(LAST_SESSION_NAME)) {
+					//TODO enable last session button
+				}
+				//window.localStorage.setItem("key", "val");
+				
+				//===========
 				console.log("on ready");
-				$.get(pokeApiBaseUrl + "generation", function(response) {
+				loadGens(function(gens) {
 					let rows = [];
-					for(let i = 0; i < response.results.length; i++) {
-						let genNum = getNumFromUrl(response.results[i].url);
-						let splitName = response.results[i].name.split("-");
-						
+					for(let i = 0; i < gens.length; i++) {
 						//Create the tags for generations obtained from the api
 						let row = document.createElement("tr");
 						let col = document.createElement("td");
 						let cbx = document.createElement("input");
 						cbx.type = "checkbox";
-						cbx.id = "gen" + genNum + "Check";
-						$(cbx).attr("genNum", genNum);
+						cbx.id = "gen" + gens[i].genNum + "Check";
+						$(cbx).attr("genNum", gens[i].genNum);
 						let label = document.createElement("label");
 						$(label).attr("for", cbx.id);
-						label.innerText = capitalizeFirstLetter(splitName[0]) + " " + splitName[1].toUpperCase();
+						label.innerText = gens[i].genName;
 						
 						//Append the elements to each other leaving the row as base element
 						$(row).append(col);

@@ -1,3 +1,25 @@
+const pokeApiBaseUrl = "https://pokeapi.co/api/v2/";
+
+function loadGens(callback) {
+	$.get(pokeApiBaseUrl + "generation", function(response) {
+		var generations = [];
+		for (let i = 0; i < response.results.length; i++) {
+			const generation = response.results[i];
+			
+			let genNum = getNumFromUrl(generation.url);
+			let splitName = response.results[i].name.split("-");
+			
+			let genName = capitalizeFirstLetter(splitName[0]) + " " + splitName[1].toUpperCase()
+			generations.push({
+				genNum: genNum,
+				genName: genName
+			});
+		}
+		
+		callback(generations);
+	});
+}
+
 function loadPokemonFromGens(genNums, callback) {
 	let receivedGens = 0;
 	let totalPoke = 0;
