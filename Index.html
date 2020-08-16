@@ -75,10 +75,15 @@
 				
 				pokeContainer.children().detach()
 				
+				let isPar = false;
 				for (const id in pokeById) {
 					if (pokeById.hasOwnProperty(id)) {
 						let row = createPokeRow(pokeById[id]);
 						
+						if(isPar) {
+							row.className = "pokeRowPar";
+						}
+						isPar = !isPar;
 						pokeByName[pokeById[id].name] = {
 							id: id,
 							jqRow: $(row)
@@ -96,7 +101,7 @@
 				let row = document.createElement("div");
 				let pokeAmount = 0;
 				if(poke.obtainedAmount) {
-					pokeAmount = poke.obtainedAmount;
+					pokeAmount = +poke.obtainedAmount;
 				}
 				
 				//Image
@@ -149,17 +154,66 @@
 				}
 			}
 			
-			function onSearchChange() {//TODO
-				const searchTxt = $("#searchTxt").val().toLowerCase();
-				const isSearchEmpty = searchTxt == "";
+			function onFilterChange() {//TODO
+				const filterOptions = {
+					searchTxt : $("#searchTxt").val().toLowerCase(),
+					isSearchEmpty : searchTxt == "",
+					hideObtained : $("#chkHideObtained").prop("checked")
+				};
+				
+				let filterFunction = prepareFilterFunction(filterOptions);
+				
+				let isPar = false;
 				for(const name in pokeByName) {
-					if(isSearchEmpty || name.toLowerCase().search(searchTxt) >= 0) {
-						pokeByName[name].jqRow.show();
+					if(filterFunction(name)) {
+						let row = pokeByName[name].jqRow;
+						row.show();
+						
+						if(isPar) {
+							row.addClass("pokeRowPar");
+						}
+						else {
+							row.removeClass("pokeRowPar");
+						}
+						isPar = !isPar;
 					}
 					else {
 						pokeByName[name].jqRow.hide();
 					}
 				}
+			}
+			
+			function prepareFilterFunction(filterOptions) {
+				let result;
+				let checkName = function(name) {
+					return name.toLowerCase().search(filterOptions.searchTxt) >= 0;
+				};
+				let isObtained = function(name) {
+					return !+(pokeById[pokeByName[name].id].obtainedAmount);
+				}
+				
+				if(filterOptions.hideObtained) {
+					if(filterOptions.isSearchEmpty) {
+						result = function(name) {
+							return isObtained(name);
+						};
+					}
+					else {
+						result = function(name) {
+							return isObtained(name) && checkName(name);
+						};
+					}
+				}
+				else if(filterOptions.isSearchEmpty) {
+					result = function() {
+						return true;
+					};
+				}
+				else {
+					result = checkName;
+				}
+				
+				return result;
 			}
 		</script>
 		<link rel="stylesheet" href="assets/main.css">
@@ -189,7 +243,11 @@
 			<div class="tableContainer">
 				<div class="tableHeaderRow">
 					<span style="padding: 2em;" class="tableHeader">Pokemon species</span>
-					<span><input id="searchTxt" type="text" placeholder="Search..." onkeyup="onSearchChange()"></input> </span>
+					<span>
+						<input id="searchTxt" type="text" placeholder="Search..." onkeyup="onFilterChange()"></input>
+						<input id="chkHideObtained" type="checkbox" onchange="onFilterChange()"></input>
+						<label for="chkHideObtained">Hide obtained pokemon</label>
+					</span>
 				</div>
 				<div id="pokeContainer" class="pokeContainer">
 					

@@ -87,8 +87,16 @@
 	width: 6em;
 }
 
+.pokeRowpart input {
+	max-width: 5em;
+}
+
 .pokeRowPart img {
 	width: 96px;
+}
+
+.pokeRowPar {
+	background-color: #00000011;
 }
 
 .spinner {
