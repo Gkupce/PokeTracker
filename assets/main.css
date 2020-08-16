@@ -46,6 +46,51 @@
 	filter: grayscale(100%);
 }
 
+.mainModal {
+	margin-top: 5vh;
+	margin-bottom: 5vh;
+	margin-left: 10vw;
+	margin-right: 10vw;
+	height: 80vh;
+	padding: 1vmin;
+	border: 1px solid black;
+	border-radius: 1em;
+	background-color: #ceffee;
+}
+
+.tableContainer {
+	/* overflow: auto; */
+	display: flex;
+	flex-flow: column;
+	height: 100%;
+}
+
+.tableHeaderRow {
+	flex: 0 1 auto;
+}
+
+.tableHeader {
+	font-weight: bold;
+}
+
+.pokeContainer {
+	flex: 1 1 auto;
+	overflow: auto;
+}
+
+.pokeRowPart {
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.pokeName {
+	width: 6em;
+}
+
+.pokeRowPart img {
+	width: 96px;
+}
+
 .spinner {
 	position: absolute;
 	top: 50%;

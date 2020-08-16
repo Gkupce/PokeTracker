@@ -1,5 +1,22 @@
 {
     "gotoSymbolStack.currentStackPosition": 0,
     "gotoSymbolStack.maxStackPosition": 0,
-    "gotoSymbolStack.filePositionInfo": []
+    "gotoSymbolStack.filePositionInfo": [],
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#651b1b",
+        "activityBar.activeBorder": "#227e22",
+        "activityBar.background": "#651b1b",
+        "activityBar.foreground": "#e7e7e7",
+        "activityBar.inactiveForeground": "#e7e7e799",
+        "activityBarBadge.background": "#227e22",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "statusBar.background": "#3d1010",
+        "statusBar.foreground": "#e7e7e7",
+        "statusBarItem.hoverBackground": "#651b1b",
+        "titleBar.activeBackground": "#3d1010",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.inactiveBackground": "#3d101099",
+        "titleBar.inactiveForeground": "#e7e7e799"
+    },
+    "peacock.color": "#3d1010"
 }
