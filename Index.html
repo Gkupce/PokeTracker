@@ -6,7 +6,7 @@
 		<script src="assets/pokeApiParsing.js"></script>
 		<script>
 			const LAST_SESSION_KEY = "lastSession";
-			let pokeById;
+			let pokeById = {};
 			let pokeByName = {};
 			
 			$(document).ready(function() {
@@ -26,6 +26,7 @@
 						let cbx = document.createElement("input");
 						cbx.type = "checkbox";
 						cbx.id = "gen" + gens[i].genNum + "Check";
+						cbx.onchange = handleGenSelectChange;
 						$(cbx).attr("genNum", gens[i].genNum);
 						let label = document.createElement("label");
 						$(label).attr("for", cbx.id);
@@ -46,10 +47,9 @@
 				});
 			});
 			
-			//onbeforeunload
 			$(window).on("unload", function() {
 				//Save session as last session.
-				if(pokeById) {
+				if(!jQuery.isEmptyObject(pokeById)) {
 					window.localStorage.setItem(LAST_SESSION_KEY, JSON.stringify(pokeById));
 				}
 			});
@@ -154,7 +154,7 @@
 				}
 			}
 			
-			function onFilterChange() {//TODO
+			function onFilterChange() {
 				const filterOptions = {
 					searchTxt : $("#searchTxt").val().toLowerCase(),
 					isSearchEmpty : searchTxt == "",
@@ -184,36 +184,47 @@
 			}
 			
 			function prepareFilterFunction(filterOptions) {
-				let result;
-				let checkName = function(name) {
-					return name.toLowerCase().search(filterOptions.searchTxt) >= 0;
-				};
-				let isObtained = function(name) {
-					return !+(pokeById[pokeByName[name].id].obtainedAmount);
-				}
-				
+				let filterFunctions = [];
 				if(filterOptions.hideObtained) {
-					if(filterOptions.isSearchEmpty) {
-						result = function(name) {
-							return isObtained(name);
-						};
-					}
-					else {
-						result = function(name) {
-							return isObtained(name) && checkName(name);
-						};
-					}
+					//Add filtering by obtained.
+					filterFunctions.push(function(name) {
+						return !+(pokeById[pokeByName[name].id].obtainedAmount);
+					});
 				}
-				else if(filterOptions.isSearchEmpty) {
-					result = function() {
+				if(!filterOptions.isSearchEmpty) {
+					//Add filtering by name.
+					filterFunctions.push(function(name) {
+						return name.toLowerCase().search(filterOptions.searchTxt) >= 0;
+					});
+				}
+				if(filterFunctions.length == 0) {
+					//If there are no filters, just allow every pokemon to pass.
+					return function() {
 						return true;
 					};
 				}
 				else {
-					result = checkName;
+					return function(name) {
+						//Check all filters
+						for(let i = 0; i < filterFunctions.length; i++) {
+							//Stop on the first filter failed
+							if(!filterFunctions[i](name)) {
+								return false;
+							}
+						}
+						return true;
+					}
 				}
-				
-				return result;
+			}
+			
+			function handleGenSelectChange() {
+				let genSelected = $("#genCheckboxes [type=checkbox]:checked").length > 0;
+				if(genSelected) {
+					$("#loadPokeBtn").prop("disabled", false);
+				}
+				else {
+					$("#loadPokeBtn").prop("disabled", true);
+				}
 			}
 		</script>
 		<link rel="stylesheet" href="assets/main.css">
@@ -228,14 +239,14 @@
 		<div class="modalBox" id="genModal" style="display: none;">
 			<div class="modalBg"></div>
 			<div class="genSelectBox">
-				Select generations to load
-				
+				<h2 style="margin: 0;">Select generations to load</h2>
+				<br/>
 				<table id="genCheckboxes">
 					<!-- Here will appear the generations after loading -->
 				</table>
-				
-				<button onclick="handleLoadGensClick()">Load!</button>
-				<button onclick="handleLoadPrevSession()" id="prevSessionBtn">Load previous session</button>
+				<br/>
+				<button id="loadPokeBtn" onclick="handleLoadGensClick()" disabled>Load selected</button>
+				<button id="prevSessionBtn" onclick="handleLoadPrevSession()">Load previous session</button>
 			</div>
 		</div>
 		<!-- ================================ -->
