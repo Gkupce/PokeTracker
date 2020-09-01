@@ -37,6 +37,7 @@ function loadPokemonFromGens(genNums, callback) {
 					if(receivedGens === genNums.length
 						&& receivedPoke === totalPoke
 					) {
+						linkEvolutionChains(obtainedPokemon);
 						callback(obtainedPokemon);
 					}
 				});
@@ -77,4 +78,42 @@ function getNumFromUrl(url) {
 
 function capitalizeFirstLetter(string) {
 	return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+function linkEvolutionChains(pokeList) {
+	for (const key in pokeList) {
+		if (pokeList.hasOwnProperty(key)) {
+			let poke = pokeList[key];
+			if(previousPokePresent(pokeList, poke)) {
+				let basePoke = pokeList[poke.evolvesFromId];
+				linkEvolutionChain(pokeList, poke, basePoke, 1);
+			}
+			else {
+				poke.basePokeId = poke.id;
+			}
+		}
+	}
+}
+
+function linkEvolutionChain(pokeList, poke, basePoke, evLevel) {
+	if(!basePoke.hasOwnProperty("evolvesToIds")) {
+		basePoke.evolvesToIds = {};
+	}
+	if(!basePoke.evolvesToIds.hasOwnProperty(evLevel)) {
+		basePoke.evolvesToIds[evLevel] = [];
+	}
+	basePoke.evolvesToIds[evLevel].push(poke.id);
+	
+	if(previousPokePresent(pokeList, basePoke)) {
+		let nextBasePoke = pokeList[basePoke.evolvesFromId];
+		linkEvolutionChain(pokeList, poke, nextBasePoke, evLevel + 1);
+	}
+	else {
+		poke.basePokeId = basePoke.id;
+	}
+}
+
+function previousPokePresent(pokeList, poke) {
+	return poke.hasOwnProperty("evolvesFromId")
+		&& pokeList.hasOwnProperty(poke.evolvesFromId);
 }

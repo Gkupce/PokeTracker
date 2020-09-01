@@ -54,6 +54,16 @@
 				}
 			});
 			
+			function handleGenSelectChange() {
+				let genSelected = $("#genCheckboxes [type=checkbox]:checked").length > 0;
+				if(genSelected) {
+					$("#loadPokeBtn").prop("disabled", false);
+				}
+				else {
+					$("#loadPokeBtn").prop("disabled", true);
+				}
+			}
+			
 			function handleLoadGensClick() {
 				let selectedGens = [];
 				$("#genCheckboxes [type=checkbox]:checked").each(function(index, genBox) {
@@ -131,10 +141,19 @@
 				amountInput.onchange = onAmountChangeBuilder(poke);
 				amountTd.append(amountInput);
 				
-				
 				row.append(imgTd);
 				row.append(nameTd);
 				row.append(amountTd);
+				
+				if(poke.basePokeId != poke.id || poke.hasOwnProperty("evolvesToIds")) {
+					//Create evolution Line button
+					let btn = document.createElement("button");
+					btn.innerText = "Show evolution line";
+					btn.onclick = showEvLineClickBuilder(poke);
+					btn.className = "evLineButton";
+					
+					row.append(btn);
+				}
 				
 				return row;
 			}
@@ -154,11 +173,30 @@
 				}
 			}
 			
+			function showEvLineClickBuilder(poke) {
+				return function() {
+					clearFilters();
+					$(".evLineButton").hide();
+					$("#hideEvLineBtn").show();
+					$("#evLineBaseId").val(poke.basePokeId);
+					onFilterChange();
+				}
+			}
+			
+			function clearFilters() {
+				$("#searchTxt").val("");
+				$("#evLineBaseId").val("");
+				$(".evLineButton").show();
+				$("#hideEvLineBtn").hide();
+				$("#chkHideObtained").prop("checked", false);
+			}
+			
 			function onFilterChange() {
 				const filterOptions = {
 					searchTxt : $("#searchTxt").val().toLowerCase(),
 					isSearchEmpty : searchTxt == "",
-					hideObtained : $("#chkHideObtained").prop("checked")
+					hideObtained : $("#chkHideObtained").prop("checked"),
+					basePokeId : $("#evLineBaseId").val()
 				};
 				
 				let filterFunction = prepareFilterFunction(filterOptions);
@@ -197,6 +235,14 @@
 						return name.toLowerCase().search(filterOptions.searchTxt) >= 0;
 					});
 				}
+				if(filterOptions.basePokeId) {
+					//Show only pokemon in an evolutionary line.
+					filterFunctions.push(function(name) {
+						let pokeId = pokeByName[name].id;
+						return pokeById[pokeId].basePokeId == filterOptions.basePokeId;
+					});
+				}
+				
 				if(filterFunctions.length == 0) {
 					//If there are no filters, just allow every pokemon to pass.
 					return function() {
@@ -217,14 +263,9 @@
 				}
 			}
 			
-			function handleGenSelectChange() {
-				let genSelected = $("#genCheckboxes [type=checkbox]:checked").length > 0;
-				if(genSelected) {
-					$("#loadPokeBtn").prop("disabled", false);
-				}
-				else {
-					$("#loadPokeBtn").prop("disabled", true);
-				}
+			function removeEvLineFilter() {
+				clearFilters();
+				onFilterChange();
 			}
 		</script>
 		<link rel="stylesheet" href="assets/main.css">
@@ -258,6 +299,8 @@
 						<input id="searchTxt" type="text" placeholder="Search..." onkeyup="onFilterChange()"></input>
 						<input id="chkHideObtained" type="checkbox" onchange="onFilterChange()"></input>
 						<label for="chkHideObtained">Hide obtained pokemon</label>
+						<button id="hideEvLineBtn" style="display: none;" onclick="removeEvLineFilter()">Stop showing evolution line</button>
+						<input id="evLineBaseId" type="hidden"></input>
 					</span>
 				</div>
 				<div id="pokeContainer" class="pokeContainer">

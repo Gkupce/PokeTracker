@@ -73,6 +73,10 @@
 	font-weight: bold;
 }
 
+.evLineButton {
+	margin-left: 2%;
+}
+
 .pokeContainer {
 	flex: 1 1 auto;
 	overflow: auto;
