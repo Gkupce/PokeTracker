@@ -329,7 +329,9 @@
 			<br />
 			<button id="loadPokeBtn" onclick="handleLoadGensClick()" disabled>Load selected</button>
 			<button id="prevSessionBtn" onclick="handleLoadPrevSession()">Load previous session</button>
-			<input type="file" id="fileInput" onchange="loadFromFile()" accept="application/json">
+			
+			<button onclick="document.getElementById('fileInput').click();">Load session from file</button>
+			<input type="file" id="fileInput" style="display: none;" onchange="loadFromFile()" accept="application/json">
 		</div>
 	</div>
 	<!-- ================================ -->
