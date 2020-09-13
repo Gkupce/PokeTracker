@@ -1,312 +1,320 @@
 <html lang="en-US">
-	<head>
-		<meta charset="UTF-8">
-		<script src="lib/jquery-3.5.1.min.js"></script>
-		
-		<script src="assets/pokeApiParsing.js"></script>
-		<script>
-			const LAST_SESSION_KEY = "lastSession";
-			let pokeById = {};
-			let pokeByName = {};
-			
-			$(document).ready(function() {
-				$(".mainModal").hide();
-				//==========
-				if(!window.localStorage.getItem(LAST_SESSION_KEY)) {
-					$("#prevSessionBtn").hide()
-				}
-				//===========
-				console.log("on ready");
-				loadGens(function(gens) {
-					let rows = [];
-					for(let i = 0; i < gens.length; i++) {
-						//Create the tags for generations obtained from the api
-						let row = document.createElement("tr");
-						let col = document.createElement("td");
-						let cbx = document.createElement("input");
-						cbx.type = "checkbox";
-						cbx.id = "gen" + gens[i].genNum + "Check";
-						cbx.onchange = handleGenSelectChange;
-						$(cbx).attr("genNum", gens[i].genNum);
-						let label = document.createElement("label");
-						$(label).attr("for", cbx.id);
-						label.innerText = gens[i].genName;
-						
-						//Append the elements to each other leaving the row as base element
-						$(row).append(col);
-						let jqCol = $(col);
-						jqCol.append(cbx);
-						jqCol.append(label);
-						rows.push(row);
-					}
-					//Add the rows to the generation selection modal
-					$("#genCheckboxes").append(rows);
-					
-					$("#genModal").show();
-					$("#loadingModal").hide();
-				});
-			});
-			
-			$(window).on("unload", function() {
-				//Save session as last session.
-				if(!jQuery.isEmptyObject(pokeById)) {
-					window.localStorage.setItem(LAST_SESSION_KEY, JSON.stringify(pokeById));
-				}
-			});
-			
-			function handleGenSelectChange() {
-				let genSelected = $("#genCheckboxes [type=checkbox]:checked").length > 0;
-				if(genSelected) {
-					$("#loadPokeBtn").prop("disabled", false);
-				}
-				else {
-					$("#loadPokeBtn").prop("disabled", true);
-				}
+
+<head>
+	<meta charset="UTF-8">
+	<script src="lib/jquery-3.5.1.min.js"></script>
+
+	<script src="assets/PokeApiParsing.js"></script>
+	<script src="assets/SaveManagement.js"></script>
+	<script>
+
+		let pokeById = {};
+		let pokeByName = {};
+
+		$(document).ready(function () {
+			$(".mainModal").hide();
+			//==========
+			if (!SaveManagement.hasLastSession()) {
+				$("#prevSessionBtn").hide()
 			}
-			
-			function handleLoadGensClick() {
-				let selectedGens = [];
-				$("#genCheckboxes [type=checkbox]:checked").each(function(index, genBox) {
-					selectedGens.push(+$(genBox).attr("genNum"));
-				});
-				if(selectedGens.length > 0) {
-					$("#loadingModal").show();
-					loadPokemonFromGens(selectedGens, refreshContainer);
+			//===========
+			console.log("on ready");
+			PokeApi.loadGens(function (gens) {
+				let rows = [];
+				for (let i = 0; i < gens.length; i++) {
+					rows.push(createGenCheckRow(gens[i]));
 				}
-			}
-			
-			function handleLoadPrevSession() {
-				refreshContainer(JSON.parse(window.localStorage.getItem(LAST_SESSION_KEY)));
-			}
-			
-			function refreshContainer(loadedPoke) {
-				pokeById = loadedPoke;
-				let pokeContainer = $("#pokeContainer");
-				
-				pokeContainer.children().detach()
-				
-				let isPar = false;
-				for (const id in pokeById) {
-					if (pokeById.hasOwnProperty(id)) {
-						let row = createPokeRow(pokeById[id]);
-						
-						if(isPar) {
-							row.className = "pokeRowPar";
-						}
-						isPar = !isPar;
-						pokeByName[pokeById[id].name] = {
-							id: id,
-							jqRow: $(row)
-						};
-						
-						pokeContainer.append(row);
-					}
-				}
-				$("#genModal").hide();
-				$(".mainModal").show();
+				//Add the rows to the generation selection modal
+				$("#genCheckboxes").append(rows);
+
+				$("#genModal").show();
 				$("#loadingModal").hide();
+			});
+		});
+
+		$(window).on("unload", function () {
+			//Save current session as last session.
+			SaveManagement.saveAsLastSession(pokeById);
+		});
+
+		function createGenCheckRow(gen) {
+			//Create the tags for generations obtained from the api
+			let row = document.createElement("tr");
+			let col = document.createElement("td");
+			let cbx = document.createElement("input");
+			cbx.type = "checkbox";
+			cbx.id = "gen" + gen.genNum + "Check";
+			cbx.onchange = handleGenSelectChange;
+			$(cbx).attr("genNum", gen.genNum);
+			let label = document.createElement("label");
+			$(label).attr("for", cbx.id);
+			label.innerText = gen.genName;
+
+			//Append the elements to each other leaving the row as base element
+			$(row).append(col);
+			let jqCol = $(col);
+			jqCol.append(cbx);
+			jqCol.append(label);
+
+			return row;
+		}
+
+		function handleGenSelectChange() {
+			let genSelected = $("#genCheckboxes [type=checkbox]:checked").length > 0;
+			if (genSelected) {
+				$("#loadPokeBtn").prop("disabled", false);
 			}
-			
-			function createPokeRow(poke) {
-				let row = document.createElement("div");
-				let pokeAmount = 0;
-				if(poke.obtainedAmount) {
-					pokeAmount = +poke.obtainedAmount;
-				}
-				
-				//Image
-				let imgTd = document.createElement("span");
-				imgTd.className = "pokeRowPart";
-				
-				let img = document.createElement("img");
-				img.src = poke.spriteUrl;
-				if(!pokeAmount) {
-					img.className = "inactive";
-				}
-				imgTd.append(img);
-				
-				//Name text
-				let nameTd = document.createElement("span");
-				nameTd.className = "pokeRowPart pokeName";
-				nameTd.innerHTML = poke.name;
-				
-				//Amount input
-				let amountTd = document.createElement("span");
-				amountTd.className = "pokeRowPart";
-				
-				let amountInput = document.createElement("input");
-				amountInput.type = "number";
-				amountInput.min = 0;
-				amountInput.value = pokeAmount;
-				amountInput.onchange = onAmountChangeBuilder(poke);
-				amountTd.append(amountInput);
-				
-				row.append(imgTd);
-				row.append(nameTd);
-				row.append(amountTd);
-				
-				if(poke.basePokeId != poke.id || poke.hasOwnProperty("evolvesToIds")) {
-					//Create evolution Line button
-					let btn = document.createElement("button");
-					btn.innerText = "Show evolution line";
-					btn.onclick = showEvLineClickBuilder(poke);
-					btn.className = "evLineButton";
-					
-					row.append(btn);
-				}
-				
-				return row;
+			else {
+				$("#loadPokeBtn").prop("disabled", true);
 			}
-			
-			function onAmountChangeBuilder(poke) {
-				return function() {
-					let row = pokeByName[poke.name].jqRow;
-					let img = row.find("img");
-					let val = row.find("input").val()
-					poke.obtainedAmount = val;
-					if(val > 0) {
-						img.removeClass("inactive");
+		}
+
+		function handleLoadGensClick() {
+			let selectedGens = [];
+			$("#genCheckboxes [type=checkbox]:checked").each(function (index, genBox) {
+				selectedGens.push(+$(genBox).attr("genNum"));
+			});
+			if (selectedGens.length > 0) {
+				$("#loadingModal").show();
+				PokeApi.loadPokemonFromGens(selectedGens, refreshContainer);
+			}
+		}
+
+		function handleLoadPrevSession() {
+			refreshContainer(SaveManagement.getLastSession());
+		}
+
+		function refreshContainer(loadedPoke) {
+			pokeById = loadedPoke;
+			let pokeContainer = $("#pokeContainer");
+
+			pokeContainer.children().detach()
+
+			let isPar = false;
+			for (const id in pokeById) {
+				if (pokeById.hasOwnProperty(id)) {
+					let row = createPokeRow(pokeById[id]);
+
+					if (isPar) {
+						row.className = "pokeRowPar";
 					}
-					else {
-						img.addClass("inactive");
-					}
-				}
-			}
-			
-			function showEvLineClickBuilder(poke) {
-				return function() {
-					clearFilters();
-					$(".evLineButton").hide();
-					$("#hideEvLineBtn").show();
-					$("#evLineBaseId").val(poke.basePokeId);
-					onFilterChange();
-				}
-			}
-			
-			function clearFilters() {
-				$("#searchTxt").val("");
-				$("#evLineBaseId").val("");
-				$(".evLineButton").show();
-				$("#hideEvLineBtn").hide();
-				$("#chkHideObtained").prop("checked", false);
-			}
-			
-			function onFilterChange() {
-				const filterOptions = {
-					searchTxt : $("#searchTxt").val().toLowerCase(),
-					isSearchEmpty : searchTxt == "",
-					hideObtained : $("#chkHideObtained").prop("checked"),
-					basePokeId : $("#evLineBaseId").val()
-				};
-				
-				let filterFunction = prepareFilterFunction(filterOptions);
-				
-				let isPar = false;
-				for(const name in pokeByName) {
-					if(filterFunction(name)) {
-						let row = pokeByName[name].jqRow;
-						row.show();
-						
-						if(isPar) {
-							row.addClass("pokeRowPar");
-						}
-						else {
-							row.removeClass("pokeRowPar");
-						}
-						isPar = !isPar;
-					}
-					else {
-						pokeByName[name].jqRow.hide();
-					}
-				}
-			}
-			
-			function prepareFilterFunction(filterOptions) {
-				let filterFunctions = [];
-				if(filterOptions.hideObtained) {
-					//Add filtering by obtained.
-					filterFunctions.push(function(name) {
-						return !+(pokeById[pokeByName[name].id].obtainedAmount);
-					});
-				}
-				if(!filterOptions.isSearchEmpty) {
-					//Add filtering by name.
-					filterFunctions.push(function(name) {
-						return name.toLowerCase().search(filterOptions.searchTxt) >= 0;
-					});
-				}
-				if(filterOptions.basePokeId) {
-					//Show only pokemon in an evolutionary line.
-					filterFunctions.push(function(name) {
-						let pokeId = pokeByName[name].id;
-						return pokeById[pokeId].basePokeId == filterOptions.basePokeId;
-					});
-				}
-				
-				if(filterFunctions.length == 0) {
-					//If there are no filters, just allow every pokemon to pass.
-					return function() {
-						return true;
+					isPar = !isPar;
+					pokeByName[pokeById[id].name] = {
+						id: id,
+						jqRow: $(row)
 					};
+
+					pokeContainer.append(row);
+				}
+			}
+			$("#genModal").hide();
+			$(".mainModal").show();
+			$("#loadingModal").hide();
+		}
+
+		function createPokeRow(poke) {
+			let row = document.createElement("div");
+			let pokeAmount = 0;
+			if (poke.obtainedAmount) {
+				pokeAmount = +poke.obtainedAmount;
+			}
+
+			//Image
+			let imgTd = document.createElement("span");
+			imgTd.className = "pokeRowPart";
+
+			let img = document.createElement("img");
+			img.src = poke.spriteUrl;
+			if (!pokeAmount) {
+				img.className = "inactive";
+			}
+			imgTd.append(img);
+
+			//Name text
+			let nameTd = document.createElement("span");
+			nameTd.className = "pokeRowPart pokeName";
+			nameTd.innerHTML = poke.name;
+
+			//Amount input
+			let amountTd = document.createElement("span");
+			amountTd.className = "pokeRowPart";
+
+			let amountInput = document.createElement("input");
+			amountInput.type = "number";
+			amountInput.min = 0;
+			amountInput.value = pokeAmount;
+			amountInput.onchange = onAmountChangeBuilder(poke);
+			amountTd.append(amountInput);
+
+			row.append(imgTd);
+			row.append(nameTd);
+			row.append(amountTd);
+
+			if (poke.basePokeId != poke.id || poke.hasOwnProperty("evolvesToIds")) {
+				//Create evolution Line button
+				let btn = document.createElement("button");
+				btn.innerText = "Show evolution line";
+				btn.onclick = showEvLineClickBuilder(poke);
+				btn.className = "evLineButton";
+
+				row.append(btn);
+			}
+
+			return row;
+		}
+
+		function onAmountChangeBuilder(poke) {
+			return function () {
+				let row = pokeByName[poke.name].jqRow;
+				let img = row.find("img");
+				let val = row.find("input").val()
+				poke.obtainedAmount = val;
+				if (val > 0) {
+					img.removeClass("inactive");
 				}
 				else {
-					return function(name) {
-						//Check all filters
-						for(let i = 0; i < filterFunctions.length; i++) {
-							//Stop on the first filter failed
-							if(!filterFunctions[i](name)) {
-								return false;
-							}
-						}
-						return true;
-					}
+					img.addClass("inactive");
 				}
 			}
-			
-			function removeEvLineFilter() {
+		}
+
+		function showEvLineClickBuilder(poke) {
+			return function () {
 				clearFilters();
+				$(".evLineButton").hide();
+				$("#hideEvLineBtn").show();
+				$("#evLineBaseId").val(poke.basePokeId);
 				onFilterChange();
 			}
-		</script>
-		<link rel="stylesheet" href="assets/main.css">
-	</head>
-	<body>
-		<!-- ================================ -->
-		<div class="spinnerBox" id="loadingModal">
-			<div class="modalBg"></div>
-			<img src="assets/Ball.PNG" alt="Loading..." class="spinner"></img>
+		}
+
+		function clearFilters() {
+			$("#searchTxt").val("");
+			$("#evLineBaseId").val("");
+			$(".evLineButton").show();
+			$("#hideEvLineBtn").hide();
+			$("#chkHideObtained").prop("checked", false);
+		}
+
+		function onFilterChange() {
+			const filterOptions = {
+				searchTxt: $("#searchTxt").val().toLowerCase(),
+				isSearchEmpty: searchTxt == "",
+				hideObtained: $("#chkHideObtained").prop("checked"),
+				basePokeId: $("#evLineBaseId").val()
+			};
+
+			let filterFunction = prepareFilterFunction(filterOptions);
+
+			let isPar = false;
+			for (const name in pokeByName) {
+				if (filterFunction(name)) {
+					let row = pokeByName[name].jqRow;
+					row.show();
+
+					if (isPar) {
+						row.addClass("pokeRowPar");
+					}
+					else {
+						row.removeClass("pokeRowPar");
+					}
+					isPar = !isPar;
+				}
+				else {
+					pokeByName[name].jqRow.hide();
+				}
+			}
+		}
+
+		function prepareFilterFunction(filterOptions) {
+			let filterFunctions = [];
+			if (filterOptions.hideObtained) {
+				//Add filtering by obtained.
+				filterFunctions.push(function (name) {
+					return !+(pokeById[pokeByName[name].id].obtainedAmount);
+				});
+			}
+			if (!filterOptions.isSearchEmpty) {
+				//Add filtering by name.
+				filterFunctions.push(function (name) {
+					return name.toLowerCase().search(filterOptions.searchTxt) >= 0;
+				});
+			}
+			if (filterOptions.basePokeId) {
+				//Show only pokemon in an evolutionary line.
+				filterFunctions.push(function (name) {
+					let pokeId = pokeByName[name].id;
+					return pokeById[pokeId].basePokeId == filterOptions.basePokeId;
+				});
+			}
+
+			if (filterFunctions.length == 0) {
+				//If there are no filters, just allow every pokemon to pass.
+				return function () {
+					return true;
+				};
+			}
+			else {
+				return function (name) {
+					//Check all filters
+					for (let i = 0; i < filterFunctions.length; i++) {
+						//Stop on the first filter failed
+						if (!filterFunctions[i](name)) {
+							return false;
+						}
+					}
+					return true;
+				}
+			}
+		}
+
+		function removeEvLineFilter() {
+			clearFilters();
+			onFilterChange();
+		}
+	</script>
+	<link rel="stylesheet" href="assets/main.css">
+</head>
+
+<body>
+	<!-- ================================ -->
+	<div class="spinnerBox" id="loadingModal">
+		<div class="modalBg"></div>
+		<img src="assets/Ball.PNG" alt="Loading..." class="spinner"></img>
+	</div>
+	<!-- ================================ -->
+	<div class="modalBox" id="genModal" style="display: none;">
+		<div class="modalBg"></div>
+		<div class="genSelectBox">
+			<h2 style="margin: 0;">Select generations to load</h2>
+			<br />
+			<table id="genCheckboxes">
+				<!-- Here will appear the generations after loading -->
+			</table>
+			<br />
+			<button id="loadPokeBtn" onclick="handleLoadGensClick()" disabled>Load selected</button>
+			<button id="prevSessionBtn" onclick="handleLoadPrevSession()">Load previous session</button>
 		</div>
-		<!-- ================================ -->
-		<div class="modalBox" id="genModal" style="display: none;">
-			<div class="modalBg"></div>
-			<div class="genSelectBox">
-				<h2 style="margin: 0;">Select generations to load</h2>
-				<br/>
-				<table id="genCheckboxes">
-					<!-- Here will appear the generations after loading -->
-				</table>
-				<br/>
-				<button id="loadPokeBtn" onclick="handleLoadGensClick()" disabled>Load selected</button>
-				<button id="prevSessionBtn" onclick="handleLoadPrevSession()">Load previous session</button>
+	</div>
+	<!-- ================================ -->
+	<div class="mainModal">
+		<div class="tableContainer">
+			<div class="tableHeaderRow">
+				<span style="padding: 2em;" class="tableHeader">Pokemon species</span>
+				<span>
+					<input id="searchTxt" type="text" placeholder="Search..." onkeyup="onFilterChange()"></input>
+					<input id="chkHideObtained" type="checkbox" onchange="onFilterChange()"></input>
+					<label for="chkHideObtained">Hide obtained pokemon</label>
+					<button id="hideEvLineBtn" style="display: none;" onclick="removeEvLineFilter()">Stop showing
+						evolution line</button>
+					<input id="evLineBaseId" type="hidden"></input>
+				</span>
+			</div>
+			<div id="pokeContainer" class="pokeContainer">
+
 			</div>
 		</div>
-		<!-- ================================ -->
-		<div class="mainModal">
-			<div class="tableContainer">
-				<div class="tableHeaderRow">
-					<span style="padding: 2em;" class="tableHeader">Pokemon species</span>
-					<span>
-						<input id="searchTxt" type="text" placeholder="Search..." onkeyup="onFilterChange()"></input>
-						<input id="chkHideObtained" type="checkbox" onchange="onFilterChange()"></input>
-						<label for="chkHideObtained">Hide obtained pokemon</label>
-						<button id="hideEvLineBtn" style="display: none;" onclick="removeEvLineFilter()">Stop showing evolution line</button>
-						<input id="evLineBaseId" type="hidden"></input>
-					</span>
-				</div>
-				<div id="pokeContainer" class="pokeContainer">
-					
-				</div>
-			</div>
-		</div>
-	</body>
+	</div>
+</body>
+
 </html>
