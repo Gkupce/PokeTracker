@@ -13,5 +13,18 @@ let SaveManagement = {
 	
 	getLastSession: function() {
 		return JSON.parse(window.localStorage.getItem(LAST_SESSION_KEY));
+	},
+	
+	saveToJson: function(value, fileName) {
+		//TODO
+		var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(value));
+		var dlAnchorElem = document.getElementById('downloadAnchorElem');
+		dlAnchorElem.setAttribute("href", dataStr);
+		dlAnchorElem.setAttribute("download", fileName + ".json");
+		dlAnchorElem.click();
+	},
+	
+	loadFromJson: function() {
+		//TODO
 	}
 }

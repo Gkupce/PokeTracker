@@ -103,6 +103,11 @@
 	background-color: #00000011;
 }
 
+.sessionControl {
+	float: right;
+	margin-right: 3%;
+}
+
 .spinner {
 	position: absolute;
 	top: 50%;
