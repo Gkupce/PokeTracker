@@ -84,6 +84,20 @@
 			refreshContainer(SaveManagement.getLastSession());
 		}
 		
+		function loadFromFile() {
+			SaveManagement.loadFromJson(
+				$("#fileInput").prop("files")[0],
+				function(loadedResult){
+					if(!loadedResult.error) {
+						refreshContainer(loadedResult.data);
+					}
+					else {
+						alert(loadedResult.error);
+					}
+				}
+			);
+		}
+		
 		function refreshContainer(loadedPoke) {
 			pokeById = loadedPoke;
 			let pokeContainer = $("#pokeContainer");
@@ -315,6 +329,7 @@
 			<br />
 			<button id="loadPokeBtn" onclick="handleLoadGensClick()" disabled>Load selected</button>
 			<button id="prevSessionBtn" onclick="handleLoadPrevSession()">Load previous session</button>
+			<input type="file" id="fileInput" onchange="loadFromFile()" accept="application/json">
 		</div>
 	</div>
 	<!-- ================================ -->
